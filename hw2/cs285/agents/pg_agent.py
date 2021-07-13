@@ -46,7 +46,7 @@ class PGAgent(BaseAgent):
 
         # TODO: step 3: use all datapoints (s_t, a_t, q_t, adv_t) to update the PG actor/policy
         ## HINT: `train_log` should be returned by your actor update method
-        train_log = TODO
+        train_log = self.actor.update(observations, actions, advantages, q_values=q_values)
 
         return train_log
 
@@ -62,6 +62,7 @@ class PGAgent(BaseAgent):
 
             # For each point (s_t, a_t), associate its value as being the discounted sum of rewards over the full trajectory
             # In other words: value of (s_t, a_t) = sum_{t'=0}^T gamma^t' r_{t'}
+            print(rewards_list[0])
             q_values = np.concatenate([self._discounted_return(r) for r in rewards_list])
 
         # Case 2: reward-to-go PG
@@ -132,6 +133,14 @@ class PGAgent(BaseAgent):
         # Hint: note that all entries of this output are equivalent
             # because each sum is from 0 to T (and doesnt involve t)
 
+        T = len(rewards)
+
+        power = np.arange(0, T)
+        gammas = self.gamma ** power
+        returns = gammas * rewards
+        sum_discounted_returns = np.sum(returns)
+        list_of_discounted_returns = np.repeat(sum_discounted_returns, T)
+
         return list_of_discounted_returns
 
     def _discounted_cumsum(self, rewards):
@@ -146,6 +155,15 @@ class PGAgent(BaseAgent):
             # because the summation happens over [t, T] instead of [0, T]
         # HINT2: it is possible to write a vectorized solution, but a solution
             # using a for loop is also fine
+
+        T = len(rewards)
+
+        power = np.arange(0, T)
+        gammas = self.gamma ** power
+
+        list_of_discounted_cumsums = np.zeros(T)
+        for t in range(T):
+            list_of_discounted_cumsums[t] = np.sum(gammas[:T-t] * rewards[t:])
 
         return list_of_discounted_cumsums
 
