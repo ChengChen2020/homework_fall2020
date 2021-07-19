@@ -110,11 +110,13 @@ class RL_Trainer(object):
             print("\n\n********** Iteration %i ************"%itr)
 
             # decide if videos should be rendered/logged at this iteration
-            if itr % self.params['video_log_freq'] == 0 and self.params['video_log_freq'] != -1:
+            if self.params['video_log_freq'] == -1:
+                self.logvideo = False
+            elif itr % self.params['video_log_freq'] == 0:
                 self.logvideo = True
             else:
                 self.logvideo = False
-            self.log_video = self.logvideo
+            # self.log_video = self.logvideo
 
             # decide if metrics should be logged
             if self.params['scalar_log_freq'] == -1:
@@ -130,7 +132,7 @@ class RL_Trainer(object):
                                 self.params['batch_size'])
             paths, envsteps_this_batch, train_video_paths = training_returns
             
-            print("number of trajs:", len(paths[0]))
+            print("number of trajs:", len(paths))
             print("envsteps_this_batch:", envsteps_this_batch)
             
             self.total_envsteps += envsteps_this_batch
@@ -172,7 +174,7 @@ class RL_Trainer(object):
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
         # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
         train_video_paths = None
-        if self.log_video:
+        if self.logvideo:
             print('\nCollecting train rollouts to be used for saving videos...')
             ## TODO look in utils and implement sample_n_trajectories
             train_video_paths = utils.sample_n_trajectories(self.env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
@@ -186,7 +188,9 @@ class RL_Trainer(object):
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(self.params['train_batch_size'])
 
-            print(ob_batch.shape, ac_batch.shape, re_batch[0].shape, next_ob_batch.shape, terminal_batch.shape)
+            print(ob_batch.shape, ac_batch.shape, next_ob_batch.shape, terminal_batch.shape)
+            for re in re_batch:
+                print(re.shape)
             # TODO use the sampled data to train an agent
             # HINT: use the agent's train function
             # HINT: keep the agent's training log for debugging

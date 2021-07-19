@@ -3,6 +3,7 @@ import numpy as np
 from .base_agent import BaseAgent
 from cs285.policies.MLP_policy import MLPPolicyPG
 from cs285.infrastructure.replay_buffer import ReplayBuffer
+from cs285.infrastructure.utils import normalize
 
 
 class PGAgent(BaseAgent):
@@ -40,9 +41,11 @@ class PGAgent(BaseAgent):
 
         # step 1: calculate q values of each (s_t, a_t) point, using rewards (r_0, ..., r_t, ..., r_T)
         q_values = self.calculate_q_vals(rewards_list)
+        print(q_values.shape)
 
         # step 2: calculate advantages that correspond to each (s_t, a_t) point
         advantages = self.estimate_advantage(observations, q_values)
+        print(advantages.shape)
 
         # TODO: step 3: use all datapoints (s_t, a_t, q_t, adv_t) to update the PG actor/policy
         ## HINT: `train_log` should be returned by your actor update method
@@ -69,6 +72,7 @@ class PGAgent(BaseAgent):
         # Estimate Q^{pi}(s_t, a_t) by the discounted sum of rewards starting from t
         else:
 
+            print(rewards_list[0])
             # For each point (s_t, a_t), associate its value as being the discounted sum of rewards over the full trajectory
             # In other words: value of (s_t, a_t) = sum_{t'=t}^T gamma^(t'-t) * r_{t'}
             q_values = np.concatenate([self._discounted_cumsum(r) for r in rewards_list])
@@ -103,7 +107,7 @@ class PGAgent(BaseAgent):
             ## TODO: standardize the advantages to have a mean of zero
             ## and a standard deviation of one
             ## HINT: there is a `normalize` function in `infrastructure.utils`
-            advantages = TODO
+            advantages = normalize(advantages, np.mean(advantages), np.std(advantages))
 
         return advantages
 
